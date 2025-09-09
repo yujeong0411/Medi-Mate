@@ -90,10 +90,10 @@ Medi-Mate/
 ├── backend/                     # FastAPI 서버
 │   ├── main.py                 # FastAPI 메인 서버
 │   ├── rag_system.py          # RAG 시스템 (핵심)
-│   ├── common_parser.py  
-│   ├── data_builder.py  
-│   ├── kfda_data_handler.py  
-│   ├── direct_embedder.py  
+│   ├── common_parser.py       # 공통 파싱 유틸리티
+│   ├── data_builder.py        # 데이터 구축 및 처리
+│   ├── kfda_data_handler.py   # 식약처 API 연동
+│   ├── direct_embedder.py     # 임베딩 처리
 │   ├── .env                   # API 키 환경변수
 │   └── requirements.txt
 │
@@ -207,26 +207,6 @@ curl -X POST "http://localhost:8000/api/chat" \
 - 다단계 안전성 검증
 - 출처 투명성 보장
 
-## 🚀 향후 발전 방향
-
-### 단기 개선 (1-2개월)
-- [ ] 약물 데이터베이스 확장 (50+ 약물)
-- [ ] 고급 안전성 규칙 추가
-- [ ] 사용자 피드백 시스템
-- [ ] 성능 모니터링 대시보드
-
-### 중기 발전 (3-6개월)
-- [ ] BGE-M3 임베딩 모델 업그레이드
-- [ ] 의료 문서 자동 수집 파이프라인
-- [ ] 다중 언어 지원
-- [ ] 음성 인터페이스 추가
-
-### 장기 비전 (6개월+)
-- [ ] 의료 전문가 검증 시스템
-- [ ] 개인화 복약 관리
-- [ ] 의료기관 API 연동
-- [ ] 모바일 앱 개발
-
 ## 🤝 기여하기
 
 1. Fork the Project
@@ -235,9 +215,6 @@ curl -X POST "http://localhost:8000/api/chat" \
 4. Push to the Branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
-## 📄 라이선스
-
-이 프로젝트는 MIT 라이선스 하에 배포됩니다. 자세한 내용은 `LICENSE` 파일을 참조하세요.
 
 ## ⚠️ 의료 면책조항
 
