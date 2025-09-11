@@ -82,7 +82,8 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
-*/data
+data/
+.data/*
 */__pycache__
 --cached
 *.pyc
