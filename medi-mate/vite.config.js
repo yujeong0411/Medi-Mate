@@ -8,7 +8,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'prompt',
-      includeAssets: ['favicon.ico'],
+      includeAssets: ['favicon.png'],
       manifest: {
         name: '복약지도 챗봇',
         short_name: '복약지도',
