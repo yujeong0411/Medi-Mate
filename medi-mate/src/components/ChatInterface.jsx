@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { Send, Bot, User, ExternalLink, Copy, RotateCcw, CheckCircle, Search, Brain } from 'lucide-react'
-import { chatAPI } from './api'
+import { chatAPI } from '../services/api'
+import PWAInstallPrompt from '../PWAInstallPrompt'
 
 const ChatInterface = () => {
   const [messages, setMessages] = useState([
@@ -343,6 +344,7 @@ const ChatInterface = () => {
           </button>
         </div>
       </div>
+      <PWAInstallPrompt />
     </div>
   )
 }
