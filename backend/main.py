@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import time
 import uvicorn
+import os
 from typing import Optional, List, Dict
 from rag_system import get_rag_system
 from config import settings
@@ -42,16 +43,10 @@ def check_emergency_keywords(query: str) -> List[str]:
     warnings = []
     
     emergency_keywords = ["응급", "급성", "중독", "쇼크", "호흡곤란", "의식잃음"]
-    pregnancy_keywords = ["임신", "임산부", "수유", "모유"]
 
     for keyword in emergency_keywords:
         if keyword in query:
             warnings.append("🚨 응급상황이 의심됩니다. 즉시 119에 연락하거나 응급실로 가세요!")
-            break
-    
-    for keyword in pregnancy_keywords:
-        if keyword in query:
-            warnings.append("⚠️ 임신/수유 중에는 반드시 의사와 상담 후 복용하세요.")
             break
 
     return warnings
@@ -146,4 +141,5 @@ async def get_all_drugs():
         return {"error": str(e)}
 
 if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 8000))  # Railway가 자동으로 PORT 설정
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

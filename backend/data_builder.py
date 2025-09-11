@@ -2,15 +2,14 @@ import os
 import json
 import faiss
 import time
-import re
 import requests
 import numpy as np
 from datetime import datetime
 from typing import List, Dict
 from dotenv import load_dotenv
 from kfda_data_handler import get_data_handler
-from direct_embedder import DirectEmbedder
-from common_parser import item_to_documents
+from embedder import UpstageEmbedder
+from common_parser import item_to_documents, create_embedding_content
 
 load_dotenv()
     
@@ -31,12 +30,10 @@ class MedicalDataBuilder:
         os.makedirs(data_dir, exist_ok=True)
         
         # 임베딩 모델
-        self.embedder = DirectEmbedder()
+        self.embedder = UpstageEmbedder(model_name="solar-embedding-1-large-passage")
         
         # 식약처 데이터 핸들러
         self.data_handler = get_data_handler()
-        
-        print(f"데이터 빌더 초기화 완료 (목표: {target_documents}개 문서)")
 
     def load_progress(self) -> Dict:
         """이전 진행 상황 로드"""
@@ -51,13 +48,11 @@ class MedicalDataBuilder:
             progress["last_update"] = datetime.now().isoformat()
             with open(self.progress_path, 'w', encoding='utf-8') as f:
                 json.dump(progress, f, ensure_ascii=False, indent=2)
-                print(f"진행 상황 저장: {progress}")  # 디버깅용
         except Exception as e:
             print(f"진행 상황 저장 실패: {e}")
 
     def collect_documents(self) -> List[Dict]:
         """페이징 방식으로 전체 약물 데이터 수집"""
-        print("=== 식약처 API 전체 데이터 수집 시작 ===")
 
         # 기존 데이터 로드
         existing_documents = []
@@ -66,21 +61,18 @@ class MedicalDataBuilder:
                 with open(self.documents_path, 'r', encoding='utf-8') as f:
                     data = json.load(f)
                     existing_documents = data.get('documents', [])
-                    print(f"기존 수집된 문서: {len(existing_documents)}개")
             except Exception as e:
                 print(f"기존 데이터 로드 실패: {e}")
         
         # 진행 상황 로드
         progress = self.load_progress()
         start_page = progress.get("last_page", 0) + 1
-        print(f"페이지 {start_page}부터 수집 시작...")
         
         all_documents = existing_documents.copy()  # 기존 데이터 복사
         page = start_page  # 마지막 페이지부터 시작
 
         while page <= self.max_pages:
             try:
-                print(f"페이지 {page} 수집 중...")
 
                 params = {
                     'serviceKey': self.data_handler.api_key,
@@ -111,8 +103,6 @@ class MedicalDataBuilder:
                 if not items:
                     print(f"페이지 {page}: 데이터 없음 - 수집 완료")
                     break
-                
-                print(f"페이지 {page}: {len(items)}개 약물 발견")
 
                 # 각 약물 문서로 반환
                 page_documents = []
@@ -126,8 +116,6 @@ class MedicalDataBuilder:
                 progress["last_page"] = page
                 progress["total_documents"] = len(all_documents)
                 self.save_progress(progress)
-
-                print(f"페이지 {page}: {len(page_documents)}개 문서 생성 (총: {len(all_documents)}개)")
 
                 if len(all_documents) >= self.target_documents:
                     print(f"목표 달성: {len(all_documents)}개 완료")
@@ -148,10 +136,6 @@ class MedicalDataBuilder:
                 page += 1
 
         unique_documents = self._remove_duplicates(all_documents)
-
-        print(f"\n=== 수집 완료 ===")
-        print(f"총 페이지: {page-1}개")
-        print(f"총 수집 문서: {len(unique_documents)}개")
         
         return unique_documents
     
@@ -162,7 +146,6 @@ class MedicalDataBuilder:
 
     def _remove_duplicates(self, documents: List[Dict]) -> List[Dict]:
         """약물명 기준으로 중복 제거 (같은 약물은 하나만)"""
-        print("\n중복 문서 제거 중...")
         
         unique_documents = []
         seen_drugs = set() 
@@ -175,50 +158,42 @@ class MedicalDataBuilder:
             if drug_key not in seen_drugs:
                 seen_drugs.add(drug_key)
                 unique_documents.append(doc)
-            
-        removed_count = len(documents) - len(unique_documents)
-        print(f"중복 제거 완료: {removed_count}개 제거, {len(unique_documents)}개 유지")
 
         return unique_documents
     
     def build_vector_index(self, documents: List[Dict]):
         """벡터 인덱스 구축 및 저장"""
-        print(f"\n=== FAISS 벡터 인덱스 구축 ===")
-        print(f"대상 문서: {len(documents)}개")
         
         if not documents:
             print("문서가 없어 인덱스를 구축할 수 없습니다.")
             return
         
         # 임베딩 생성
-        print("임베딩 생성 중...")
-        contents = [doc["content"] for doc in documents]
+        contents = []
 
+        for i, doc in enumerate(documents):
+            embeddings_text = create_embedding_content(doc)
+            contents.append(embeddings_text)
+        
         # 배치 처리로 메모리 효율성 증대
         batch_size = 100
         all_embeddings = []
-        
+
         for i in range(0, len(contents), batch_size):
             batch = contents[i:i+batch_size]
             batch_embeddings = self.embedder.encode(batch)
             all_embeddings.append(batch_embeddings)
-            
-            print(f"  임베딩 진행률: {min(i+batch_size, len(contents))}/{len(contents)}")
     
         # 임베딩 합치기
         embeddings = np.concatenate(all_embeddings, axis=0)
 
         # FAISS 인덱스 생성
-        print("FAISS 인덱스 생성 중")
         dimension = embeddings.shape[1]
         index = faiss.IndexFlatIP(dimension)
 
         # L2 정규화 후 추가
         faiss.normalize_L2(embeddings)
         index.add(embeddings.astype('float32'))
-
-        # 디스크에 저장
-        print("디스크 저장 중...")
 
         # FAISS 인덱스 저장
         faiss.write_index(index, self.index_path)
@@ -228,24 +203,23 @@ class MedicalDataBuilder:
             'documents': documents,
             'build_date': datetime.now().isoformat(),
             'total_documents': len(documents),
-            'embedding_model': 'jhgan/ko-sroberta-multitask'
+            'embedding_model': 'solar-embedding-1-large-passage',
+            'document_format': 'direct_fields',  # 새로운 포맷 표시
+            'field_structure': [
+                '효과',
+                '복용법', 
+                '주의_금기사항',
+                '상호작용_병용',
+                '부작용',
+                '보관법'
+            ]
         }
 
         with open(self.documents_path, 'w', encoding='utf-8') as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
 
-        print(f"벡터 인덱스 구축 완료!")
-        print(f"  - 인덱스 파일: {self.index_path}")
-        print(f"  - 총 문서 수: {len(documents)}개")
-        print(f"  - 인덱스 크기: {os.path.getsize(self.index_path)/1024/1024:.1f} MB")
-
     def build_full_database(self):
         """전체 데이터베이스 구축 프로세스"""
-        start_time = time.time()
-
-        print("=" * 60)
-        print("의료 벡터 데이터베이스 구축 시작")
-        print("=" * 60)
 
         try:
             # 1. 문서 수집
@@ -253,18 +227,6 @@ class MedicalDataBuilder:
 
             # 2. 벡터 인덱스 구축
             self.build_vector_index(documents)
-
-            # 3. 완료 처리
-            elapsed_time = time.time() - start_time
-            print(f"\n데이터베이스 구축 완료!")
-            print(f"소요 시간: {elapsed_time/60:.1f}분")
-            print(f"총 문서 수: {len(documents)}개")
-            print(f"목표 달성률: {len(documents)/self.target_documents*100:.1f}%")
-
-            # 진행 상황 파일 정리
-            # if os.path.exists(self.progress_path):
-            #     os.remove(self.progress_path)
-            #     print("임시 진행 파일 정리 완료")
 
         except KeyboardInterrupt:
             print("\n사용자가 중단했습니다.")

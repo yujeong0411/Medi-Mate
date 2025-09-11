@@ -2,7 +2,9 @@ import os
 import requests
 from typing import List, Dict
 from dotenv import load_dotenv
+from openai import OpenAI
 from common_parser import item_to_documents
+from keyword_extractor import OpenAIKeywordExtractor
 
 load_dotenv()
 
@@ -13,37 +15,48 @@ class KFDADataHandler:
         self.api_key = os.getenv("KFDA_API_KEY")
         self.base_url = "http://apis.data.go.kr/1471000/DrbEasyDrugInfoService/getDrbEasyDrugList"
 
+        # OpenAI 클라이언트 (RAG 시스템과 공유)
+        self.openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        self.keyword_extractor = OpenAIKeywordExtractor(self.openai_client)
+
         if not self.api_key:
             raise ValueError("🔑 KFDA_API_KEY가 필요합니다. .env 파일에 설정하세요.")
 
     def search_drug(self, query: str) -> List[Dict]:
         """API에서 약명과 증상으로 검색하는 통합 함수"""
 
+        # 1. AI로 키워드 추출
+        drug_names, symptoms, intent = self.keyword_extractor.extract_search_keywords(query)
+
         all_documents = []
 
-        print(f" '{query}' 통합 검색 중")  
+        # 2. 추출된 키워드로 검색
+        # 약물명 검색
+        for drug_name in drug_names:
+            try:
+                drug_docs = self._search_by_drug_name(drug_name)
+                all_documents.extend(drug_docs)
 
-        # 1. 약명으로 검색 시도
-        try:
-            drug_docs = self._search_by_drug_name(query)
-            all_documents.extend(drug_docs)
-            if drug_docs:
-                print(f"약명 검색: {len(drug_docs)}개 문서")
-
-        except Exception as e:
-            print(f" 약명 검색 실패: {e}")      
+            except Exception as e:
+                print(f"❌ 약물 '{drug_name}' 검색 실패: {e}")
         
-        # 2. 증상 검색 시도
-        try:
-            symptom_docs = self._search_by_symptom(query)
-            all_documents.extend(symptom_docs)
-            if symptom_docs:
-                print(f" 증상 검색: {len(symptom_docs)}개 문서")
+        # 증상 검색  
+        for symptom in symptoms:
+            try:
+                symptom_docs = self._search_by_symptom(symptom)
+                all_documents.extend(symptom_docs)
 
-        except Exception as e:
-            print((f"증상 검색 실패: {e}"))
+            except Exception as e:
+                print(f"❌ 증상 '{symptom}' 검색 실패: {e}")
 
-        
+        # 3. 키워드가 없으면 원본 쿼리로 폴백
+        if not drug_names and not symptoms:
+            try:
+                fallback_docs = self._search_by_drug_name(query)
+                all_documents.extend(fallback_docs)
+            except:
+                pass
+            
         # 중복 제거
         unique_docs = []
         seen_products = set()
