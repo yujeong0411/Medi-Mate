@@ -43,13 +43,16 @@ const PWAInstallPrompt = () => {
 
   // 이미 설치된 경우나 24시간 내 dismiss한 경우 숨김
   useEffect(() => {
-    const dismissed = localStorage.getItem('pwa-dismissed')
+    const dismissed = Number(localStorage.getItem('pwa-dismissed'))
     if (dismissed && Date.now() - dismissed < 24 * 60 * 60 * 1000) {
       setShowInstallPrompt(false)
     }
 
     // 이미 설치된 경우 확인
-    if (window.matchMedia('(display-mode: standalone)').matches) {
+    if (
+      (window.matchMedia('(display-mode: standalone)').matches) ||
+      window.navigator.standalone === true
+    ) {
       setShowInstallPrompt(false)
     }
   }, [])

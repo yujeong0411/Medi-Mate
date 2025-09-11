@@ -156,24 +156,31 @@ const ChatInterface = () => {
   return (
     <div className="h-screen bg-gray-50 flex flex-col max-w-md sm:max-w-lg md:max-w-2xl lg:max-w-4xl mx-auto border-x border-gray-200">
       {/* 헤더 */}
-      <div className="bg-[#5b9bd5] px-4 py-3 text-white flex-shrink-0 shadow-lg rounded-b-2xl safe-area-padding">
-        <div className="flex items-center gap-3">
+      <div className="bg-[#5b9bd5] px-4 py-3 text-white flex-shrink-0 shadow-lg rounded-b-2xl">
+        {/* 상단 타이틀 영역 */}
+        <div className="flex flex-wrap items-center gap-3">
+          {/* 아이콘 */}
           <div className="w-9 h-9 bg-white/20 rounded-full flex items-center justify-center">
             <Bot className="w-5 h-5" />
           </div>
-          <div className="flex-1">
-            <h1 className="font-bold text-lg">복약지도 AI</h1>
-            <div className="flex items-center gap-1 text-xs text-blue-100">
+
+          {/* 제목 + 상태 */}
+          <div className="flex-1 min-w-0">
+            <h1 className="font-bold text-[clamp(16px,4vw,20px)] leading-snug">
+              복약지도 AI
+            </h1>
+            <div className="flex items-center gap-1 text-[clamp(11px,2.5vw,13px)] text-blue-100">
               <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></div>
               RAG 시스템 온라인
             </div>
           </div>
-          {/* 안전 고지 - 헤더 하단 */}
-          <div className="mt-2 text-center">
-            <p className="text-xs text-blue-100 bg-white/10 px-3 py-1 rounded-full border border-white/20">
-              ⚠️ 응급시 119, 정확한 진단은 의료진과 상담하세요
-            </p>
-          </div>
+        </div>
+
+        {/* 하단 안전 고지 */}
+        <div className="mt-2 text-center">
+          <p className="text-[clamp(11px,2.5vw,13px)] text-blue-100 bg-white/10 px-3 py-1 rounded-full border border-white/20">
+            ⚠️ 응급시 119, 정확한 진단은 의료진과 상담하세요
+          </p>
         </div>
       </div>
 
@@ -216,7 +223,7 @@ const ChatInterface = () => {
                     }`}>
                     <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.text}</p>
 
-                    {/* 💬 메시지 인터랙션 버튼 */}
+                    {/* 💬 메시지 인터랙션 버튼 (호버시 표시) */}
                     <div className={`absolute top-2 ${message.sender === 'user' ? '-left-12' : '-right-12'} opacity-0 group-hover:opacity-100 transition-opacity duration-200`}>
                       <div className="flex flex-col space-y-1">
                         <button
@@ -324,7 +331,7 @@ const ChatInterface = () => {
       </div>
 
       {/* 입력 영역 */}
-      <div className="bg-white border-t border-gray-200 p-4 flex-shrink-0 safe-area-padding">
+      <div className="bg-white border-t border-gray-200 p-4 flex-shrink-0">
         <div className="flex gap-2 items-center bg-gray-100 rounded-3xl px-3 py-2 shadow-inner">
           <input
             type="text"
@@ -332,8 +339,7 @@ const ChatInterface = () => {
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder={`예: "타이레놀과 애드빌 같이 먹어도 되나요?", "임신 중 감기약 복용법"`}
-            className="flex-1 bg-transparent border-0 focus:outline-none text-base px-2"
-            // text-sm → text-base (16px)
+            className="flex-1 bg-transparent border-0 focus:outline-none text-sm px-2"
             disabled={isLoading}
           />
           <button

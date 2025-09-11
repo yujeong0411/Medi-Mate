@@ -11,7 +11,6 @@
 
 html, body, #root {
   height: 100%;
-  overflow: hidden; /* 전체 페이지 스크롤 방지 */
 }
 
 body {
@@ -21,13 +20,6 @@ body {
 .chat-message {
   animation: fadeIn 0.3s ease-in;
 }
-
-/* iOS Safari safe area 대응 */
-.safe-area-padding {
-  padding-top: env(safe-area-inset-top);
-  padding-bottom: env(safe-area-inset-bottom);
-}
-
 
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
