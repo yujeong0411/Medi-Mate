@@ -10,8 +10,7 @@
 ![Railway](https://img.shields.io/badge/Railway-0B0D0E?style=for-the-badge&logo=railway&logoColor=white)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
 
-[🚀 Live Demo](https://medi-mate-production.up.railway.app/) • [📖 Blog Series](https://nursecoder.tistory.com) • [🐛 Issues](https://github.com/yujeong0411/Medi-Mate/issues)
-
+[🚀 Live Demo](https://medi-mate-production.up.railway.app/) • [📖 Blog Series](https://nursecoder.tistory.com)
 </div>
 
 ## 📋 프로젝트 개요
@@ -318,8 +317,4 @@ const ChatInterface = () => {
 
 [![GitHub stars](https://img.shields.io/github/stars/yujeong0411/Medi-Mate?style=social)](https://github.com/yujeong0411/Medi-Mate)
 [![GitHub forks](https://img.shields.io/github/forks/yujeong0411/Medi-Mate?style=social)](https://github.com/yujeong0411/Medi-Mate/fork)
-[![GitHub issues](https://img.shields.io/github/issues/yujeong0411/Medi-Mate)](https://github.com/yujeong0411/Medi-Mate/issues)
-
-[⭐ Star this repo](https://github.com/yujeong0411/Medi-Mate) • [🐛 Report Bug](https://github.com/yujeong0411/Medi-Mate/issues) • [💡 Request Feature](https://github.com/yujeong0411/Medi-Mate/issues)
-
 </div>
